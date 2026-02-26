@@ -1,0 +1,67 @@
+/* ============================================
+   THEME TRANSITION ANIMATIONS
+   ============================================ */
+
+/* Smooth transitions for all themed elements */
+[data-theme] #game-canvas {
+    transition: filter var(--transition-theme) ease;
+}
+
+/* Dialogue and modal transitions are already handled in ui.css via CSS var transitions */
+
+/* Toggle icon rotation on theme switch */
+[data-theme="night"] .toggle-icon {
+    transform: rotate(360deg);
+}
+
+/* Screen shake effect */
+.screen-shake {
+    animation: screenShake 0.2s ease-in-out;
+}
+
+@keyframes screenShake {
+    0% {
+        transform: translate(0, 0);
+    }
+
+    20% {
+        transform: translate(-2px, 1px);
+    }
+
+    40% {
+        transform: translate(2px, -1px);
+    }
+
+    60% {
+        transform: translate(-1px, 2px);
+    }
+
+    80% {
+        transform: translate(1px, -2px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
+}
+
+/* Stagger reveal for initial load */
+.stagger-1 {
+    animation-delay: 0.1s;
+}
+
+.stagger-2 {
+    animation-delay: 0.2s;
+}
+
+.stagger-3 {
+    animation-delay: 0.3s;
+}
+
+.stagger-4 {
+    animation-delay: 0.4s;
+}
+
+.stagger-5 {
+    animation-delay: 0.5s;
+}

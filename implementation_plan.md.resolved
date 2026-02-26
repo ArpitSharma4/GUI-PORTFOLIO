@@ -1,0 +1,422 @@
+# Arpit's Neighborhood Portfolio - Implementation Plan
+
+> A fully interactive 2D side-scrolling portfolio website designed as a living neighborhood world, built with HTML5 Canvas + Vanilla JS + CSS.
+
+---
+
+## Architecture Overview
+
+```mermaid
+graph TD
+    subgraph "Rendering Layers"
+        A["HTML5 Canvas - Game World"]
+        B["HTML/CSS - UI Overlays"]
+    end
+    subgraph "Game Engine - Vanilla JS"
+        C[Game Loop 60fps]
+        D[Camera System]
+        E[Input Manager]
+        F[Entity Manager]
+        G[Collision System]
+        H[Theme Manager]
+    end
+    subgraph "Entities"
+        I[Player Character]
+        J[NPCs]
+        K[Buildings / Houses]
+        L[Environment Props]
+        M[Skill Icons]
+    end
+    subgraph "UI Layer - HTML/CSS"
+        N[Dialogue Boxes]
+        O[Project Modals]
+        P[Mobile Joystick]
+        Q[Day/Night Toggle]
+        R[HUD / Instructions]
+    end
+
+    C --> D --> A
+    C --> F --> I
+    F --> J
+    F --> K
+    F --> L
+    F --> M
+    E --> I
+    E --> N
+    E --> O
+    H --> A
+    H --> B
+    F --> G
+    K --> N --> O
+```
+
+---
+
+## File and Folder Structure
+
+```
+c:\Portfolio\
+├── index.html                  # Entry point
+├── css/
+│   ├── variables.css           # CSS custom properties (day/night themes)
+│   ├── base.css                # Reset, fonts, global styles
+│   ├── ui.css                  # Dialogue boxes, modals, HUD
+│   ├── joystick.css            # Mobile virtual joystick
+│   └── transitions.css         # Day/night transition animations
+├── js/
+│   ├── main.js                 # Bootstrap, game loop init
+│   ├── engine/
+│   │   ├── GameLoop.js         # RequestAnimationFrame loop (update + render)
+│   │   ├── Camera.js           # Smooth-follow camera with bounds
+│   │   ├── InputManager.js     # Keyboard (WASD/Arrows) + Mobile touch
+│   │   └── CollisionSystem.js  # AABB ground + boundary constraints
+│   ├── entities/
+│   │   ├── Player.js           # Main character (walk, idle, shadow)
+│   │   ├── NPC.js              # NPC base class (idle, speech bubble)
+│   │   ├── Building.js         # Interactive building (house/office)
+│   │   ├── SkillIcon.js        # Floating skill badge in park area
+│   │   └── EnvironmentProp.js  # Trees, fences, flowers, lamps, clouds
+│   ├── world/
+│   │   ├── WorldBuilder.js     # Assembles the entire world from data
+│   │   ├── ParallaxLayer.js    # Parallax background rendering
+│   │   ├── worldData.js        # All positions, NPC data, project data
+│   │   └── Skybox.js           # Sky gradient + sun/moon + clouds
+│   ├── systems/
+│   │   ├── ThemeManager.js     # Day to Night transition logic
+│   │   ├── DialogueSystem.js   # RPG-style dialogue box controller
+│   │   ├── ModalSystem.js      # Project detail modal controller
+│   │   ├── ParticleSystem.js   # Fireflies, leaves, birds
+│   │   └── AudioManager.js     # Optional ambient sound toggle
+│   └── utils/
+│       ├── SpriteSheet.js      # Sprite atlas slicing + animation
+│       ├── Easing.js           # Easing functions
+│       └── helpers.js          # Misc utilities
+├── assets/
+│   ├── sprites/
+│   │   ├── player/             # Player walk + idle sprite sheets
+│   │   ├── npcs/               # NPC sprite sheets
+│   │   └── icons/              # Skill icons (Python, React, etc.)
+│   ├── tiles/
+│   │   ├── houses/             # House/building tile art
+│   │   ├── environment/        # Trees, fences, flowers, lamps
+│   │   └── ground/             # Walkable path tiles
+│   ├── backgrounds/
+│   │   ├── sky-day.png         # Parallax sky layer (day)
+│   │   ├── sky-night.png       # Parallax sky layer (night)
+│   │   ├── mountains.png       # Far parallax layer
+│   │   ├── hills.png           # Mid parallax layer
+│   │   └── trees-bg.png        # Near parallax layer
+│   └── audio/                  # Optional ambient sfx
+└── favicon.ico
+```
+
+---
+
+## Phased Implementation Plan
+
+### Phase 1 - Foundation and Game Engine Core
+**Goal:** Get a canvas rendering with a movable character on a ground plane.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 1.1 | **Project scaffold** | Create index.html, CSS files, JS module structure. Import Google Font Pixelify Sans for pixel-RPG feel, and Quicksand as body font. | 30m |
+| 1.2 | **CSS variables and theming** | Define variables.css with --sky-gradient, --ground-color, --text-color, --accent, etc. for both data-theme=day and data-theme=night. | 30m |
+| 1.3 | **Game Loop** | Implement GameLoop.js - requestAnimationFrame loop with delta-time, update and render callbacks. Target 60fps. | 45m |
+| 1.4 | **Canvas setup** | Full-viewport canvas element. Handle resize. Set up 2D context with proper DPI scaling. | 30m |
+| 1.5 | **Input Manager** | InputManager.js - Listen for keydown/keyup for WASD + Arrow keys. Track held keys. Add mobile touch zones later. | 30m |
+| 1.6 | **Player entity** | Player.js - Rectangle placeholder (later sprite). Smooth horizontal movement. Idle + walk state. Constrained to ground Y. Subtle shadow ellipse under feet. | 1h |
+| 1.7 | **Camera system** | Camera.js - Smoothly lerp to player X position. Clamp to world bounds. Apply transform before rendering all entities. | 45m |
+| 1.8 | **Collision boundaries** | CollisionSystem.js - Define walkable ground Y-level. Left/right world bounds. Player cannot walk into sky or below ground. AABB checks for building boundaries. | 45m |
+
+> [!TIP]
+> Phase 1 deliverable: A colored rectangle walking left/right on a flat ground, camera following, constrained to world bounds.
+
+---
+
+### Phase 2 - World Construction and Parallax
+**Goal:** Build the visual world with sky, ground, buildings, and parallax depth.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 2.1 | **Skybox** | Skybox.js - Render vertical gradient for sky. Place sun (day) or moon (night) with slow arc animation. CSS-driven gradient values. | 1h |
+| 2.2 | **Parallax layers** | ParallaxLayer.js - 3-4 layers (far mountains, mid hills, near trees). Each moves at different speed relative to camera. Seamless horizontal tiling. | 1.5h |
+| 2.3 | **Ground and path** | Render ground tiles - a walkable sidewalk/road. Use repeating tile pattern. Ground line is the collision surface. | 45m |
+| 2.4 | **Generate art assets** | Use the generate_image tool to create: player sprites, NPC sprites, house facades, trees, fences, flowers, sun/moon, clouds, parallax layers - all in a flat vector illustration style with warm color palette. | 2h |
+| 2.5 | **Sprite system** | SpriteSheet.js - Load sprite atlas images, slice into frames, animate at configurable FPS. Used by Player, NPCs, and props. | 1h |
+| 2.6 | **World data** | worldData.js - Define array of all world objects with type, x, y, width, height, data. Buildings at specific X positions. NPCs near buildings. Park area with skills. | 1h |
+| 2.7 | **WorldBuilder** | WorldBuilder.js - Read worldData, instantiate entities, register with entity manager. Set up collision zones. | 1h |
+| 2.8 | **Z-index / depth sorting** | Render order: Sky, Parallax BG, Buildings, Ground objects, Player, Foreground elements (lamp posts, fence tops). Player walks behind foreground props but in front of houses. | 45m |
+
+> [!IMPORTANT]
+> **Art style decision:** Flat vector illustration (not pixel art). This gives a clean, whimsical, modern indie-game feel while being practical with Canvas rendering and keeping file sizes small.
+
+---
+
+### Phase 3 - Interactive Buildings and Project System
+**Goal:** Each building is an interactive project showcase.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 3.1 | **Building entity** | Building.js - Render house sprite. Highlight outline / glow when player is nearby (interaction range). Show E prompt. | 1h |
+| 3.2 | **Dialogue system** | DialogueSystem.js - RPG-style dialogue box (HTML overlay, not canvas). Rounded corners, slight paper texture, typewriter text reveal. NPC name, message, and Enter Project button. | 1.5h |
+| 3.3 | **Dialogue UI styling** | ui.css - Style dialogue box: soft beige/cream background, dark text, rounded borders, subtle inner shadow, pixel-font for NPC name, body font for message. No generic white cards. | 1h |
+| 3.4 | **Modal system** | ModalSystem.js - Full overlay for project details. Slide-up animation with slight screen-shake micro-effect. Contains: title, description, tech stack pills, image area, GitHub + Live buttons. | 1.5h |
+| 3.5 | **Modal UI styling** | Style modal with: textured background, warm tones, subtle grain overlay, tech stack as colored pills, buttons styled like game UI elements. | 1h |
+| 3.6 | **Project data** | Define 4-5 placeholder projects in worldData.js with names, descriptions, tech stacks, and links. One building is the Dell Technologies office. | 30m |
+| 3.7 | **Dell Office** | Special glass-building sprite. Interior overlay shows Currently working as Automation Intern at Dell Technologies with corporate-themed content. | 45m |
+
+> [!NOTE]
+> Modals and dialogues are rendered as HTML/CSS overlays on top of the canvas. This keeps text SEO-friendly, copy-paste friendly, and easy to style while the game world runs at 60fps on canvas.
+
+---
+
+### Phase 4 - NPCs and Living World
+**Goal:** Populate the world with animated NPCs and environmental life.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 4.1 | **NPC base class** | NPC.js - Sprite-based entity with idle animation. Types: developer, gardener, delivery, sweeper. Each has unique idle animation loop. | 1.5h |
+| 4.2 | **NPC speech bubbles** | When player approaches within range, a small speech bubble appears above NPC with contextual hint text. Fade in/out. | 1h |
+| 4.3 | **NPC placement** | Place NPCs near buildings. Assign speech lines like: You are heading toward Arpit's ML Projects, This house contains his Web3 work, etc. | 30m |
+| 4.4 | **Environmental animations** | Animate: clouds drifting, tree/flower idle sway (canvas transform oscillation), birds flying across sky (particle-like). | 1.5h |
+| 4.5 | **Particle system** | ParticleSystem.js - Reusable particle emitter. Used for: floating leaves (day), fireflies (night), birds. Configurable speed, size, color, fade. | 1.5h |
+| 4.6 | **Street lamp system** | Lamp post entities that emit a soft radial glow in night mode. No glow in day mode. Transition with theme. | 45m |
+
+---
+
+### Phase 5 - Skills Park Zone
+**Goal:** A park area where skill icons float and reveal descriptions.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 5.1 | **Park area layout** | Define a section of the world (between buildings) as an open park with grass, benches, trees. | 45m |
+| 5.2 | **Skill icons** | SkillIcon.js - Floating badges with skill logos (Python, React, ML, Cloud, DevOps). Gentle bobbing animation. Soft glow. | 1h |
+| 5.3 | **Skill descriptions** | When player is near a skill icon, a tooltip-style description fades in below/above the icon. | 45m |
+| 5.4 | **Skill icon assets** | Generate or use SVG-style skill icons that match the flat illustration art style. | 30m |
+
+---
+
+### Phase 6 - Day/Night Theme System
+**Goal:** Smooth, cinematic transition between day and night modes.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 6.1 | **Theme manager** | ThemeManager.js - Toggle between day and night states. Animate CSS variables over 1.5s. Notify all entities of theme change. | 1h |
+| 6.2 | **Sky transition** | Smooth gradient interpolation from blue to navy. Sun fades out + slides down, Moon fades in + slides up. Stars appear. | 1h |
+| 6.3 | **Entity theme responses** | Buildings: windows glow in night mode. Lamps: activate light cone. Particles: switch from leaves/birds to fireflies. Colors: warm palette to cool palette. | 1h |
+| 6.4 | **Character ambient glow** | In night mode, a subtle radial light follows the player character. | 30m |
+| 6.5 | **Toggle button** | Floating UI button (sun/moon icon) in corner. Accessible. Keyboard shortcut (T). | 30m |
+| 6.6 | **Transition CSS** | transitions.css - All CSS transitions for overlay elements during theme switch. | 30m |
+
+---
+
+### Phase 7 - Mobile Support and Responsive Design
+**Goal:** Full mobile experience with virtual joystick.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 7.1 | **Virtual joystick** | joystick.css + Input Manager extension. Touch-based directional pad (left/right only). Semi-transparent, bottom-left of screen. | 1.5h |
+| 7.2 | **Interact button** | Mobile Interact button (bottom-right) replaces E key. | 30m |
+| 7.3 | **Responsive canvas** | Canvas scales to fill viewport on any screen size. UI overlays reposition for mobile. | 45m |
+| 7.4 | **Touch scroll prevention** | Prevent default touch behaviors that conflict with game controls. | 30m |
+| 7.5 | **Modal responsiveness** | Modals and dialogues stack vertically on mobile. Scrollable content. | 45m |
+
+---
+
+### Phase 8 - Polish, Motion Design and Performance
+**Goal:** Premium feel with motion design and optimized performance.
+
+| # | Task | Details | Est. |
+|---|------|---------|------|
+| 8.1 | **Initial load animation** | Staggered reveal: sky paints in, ground slides up, buildings pop in, character appears, Use arrows to explore hint fades in. | 1.5h |
+| 8.2 | **Screen shake** | Micro screen-shake effect (2-3px, 200ms) when entering a building / opening modal. | 30m |
+| 8.3 | **Hover glow** | Interactive objects (buildings, NPCs, skills) get a soft animated glow when player is in range. | 30m |
+| 8.4 | **Audio manager** | AudioManager.js - Optional ambient sounds: birds chirping (day), crickets (night). Mute toggle button. Web Audio API. | 1h |
+| 8.5 | **Performance optimization** | Off-screen culling (don't render entities outside camera view). Sprite caching. Throttle particle count on low-end devices. | 1h |
+| 8.6 | **SEO and meta tags** | Proper title, meta description, Open Graph tags, semantic heading in hidden overlay for crawlers. | 30m |
+| 8.7 | **Loading screen** | Simple loading bar while assets load. Prevent interaction until ready. | 45m |
+| 8.8 | **Favicon** | Generate a small house/character icon as favicon. | 15m |
+
+---
+
+## World Layout Map
+
+```
+World Start                                                                                 World End
+
+|== INTRO ==|== HOUSE 1 ==|== HOUSE 2 ==|== SKILLS PARK ==|== DELL OFFICE ==|== HOUSE 3 ==|== HOUSE 4 ==|== END ==|
+
+X:  0       500           1200          1900               2800              3600           4300          5000     5500
+
+Details:
+- INTRO ZONE (0-500):       Welcome sign, tutorial NPC, gentle flowers
+- HOUSE 1 (500-1200):       ML Project house, Developer NPC outside
+- HOUSE 2 (1200-1900):      Web3 Project house, Gardener NPC nearby
+- SKILLS PARK (1900-2800):  Open park, floating skill icons, benches, trees
+- DELL OFFICE (2800-3600):  Glass office building, Delivery NPC walking
+- HOUSE 3 (3600-4300):      Full-Stack Project house, Sweeper NPC
+- HOUSE 4 (4300-5000):      DevOps/Cloud Project house
+- END ZONE (5000-5500):     Thanks for visiting sign, contact info NPC
+```
+
+---
+
+## Rendering Layer Order (Z-Index)
+
+```
+Layer 0  (furthest back)  :  Sky gradient + Sun/Moon + Stars
+Layer 1                   :  Parallax mountains (0.2x scroll speed)
+Layer 2                   :  Parallax hills (0.4x scroll speed)
+Layer 3                   :  Parallax trees (0.6x scroll speed)
+Layer 4                   :  Buildings / Houses (1.0x scroll speed)
+Layer 5                   :  Ground / Road / Path
+Layer 6                   :  NPCs + Skill Icons
+Layer 7                   :  Player Character
+Layer 8  (closest)        :  Foreground elements: Lamp posts, fence tops, flowers in front
+Layer 9                   :  Particles: Leaves, Fireflies, Birds
+```
+
+> [!IMPORTANT]
+> The player (Layer 7) renders **in front of** buildings (Layer 4) but **behind** foreground props (Layer 8). This sells the depth of the parallax world.
+
+---
+
+## Color Palettes
+
+### Day Mode
+| Role | Color | Hex |
+|------|-------|-----|
+| Sky Top | Soft Blue | `#87CEEB` |
+| Sky Bottom | Warm White | `#F0E6D3` |
+| Ground/Path | Sandy Warm | `#C4A882` |
+| Grass | Soft Green | `#7CB342` |
+| Houses | Warm Pastels | `#F4D9A0`, `#E8B4A0`, `#A8D5BA` |
+| Text Primary | Dark Brown | `#3E2723` |
+| Accent | Terracotta | `#D4775D` |
+| UI Background | Cream | `#FFF8E7` |
+
+### Night Mode
+| Role | Color | Hex |
+|------|-------|-----|
+| Sky Top | Deep Navy | `#0B1026` |
+| Sky Bottom | Dark Purple | `#1A1A3E` |
+| Ground/Path | Dark Brown | `#4A3728` |
+| Grass | Muted Green | `#3D5A3D` |
+| Houses | Dim Pastels | `#8B7355`, `#7A5C5C`, `#5A7A6A` |
+| Text Primary | Soft White | `#E8E0D5` |
+| Accent | Firefly Gold | `#FFD54F` |
+| Window Glow | Warm Yellow | `#FFE082` |
+| Lamp Light | Soft Orange | `#FFCC80` |
+
+---
+
+## Typography
+
+| Usage | Font | Source |
+|-------|------|--------|
+| Headings / NPC Names | **Pixelify Sans** | Google Fonts |
+| Dialogue Text / Body | **Quicksand** | Google Fonts |
+| UI Labels / Tech Stack | **Space Mono** | Google Fonts |
+
+---
+
+## Interaction Model
+
+```mermaid
+stateDiagram-v2
+    [*] --> Exploring
+    Exploring --> NearBuilding: Walk near building
+    Exploring --> NearNPC: Walk near NPC
+    Exploring --> NearSkill: Walk near skill icon
+
+    NearBuilding --> ShowPrompt: Show E Interact
+    ShowPrompt --> DialogueOpen: Press E or Tap
+    DialogueOpen --> ModalOpen: Click Enter Project
+    ModalOpen --> Exploring: Close Modal
+
+    NearNPC --> SpeechBubble: Auto show
+    SpeechBubble --> Exploring: Walk away
+
+    NearSkill --> SkillTooltip: Auto show
+    SkillTooltip --> Exploring: Walk away
+
+    Exploring --> ThemeToggle: Press T or Click Toggle
+    ThemeToggle --> Exploring: Animation completes
+```
+
+---
+
+## Technical Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Rendering | HTML5 Canvas 2D | 60fps game world, no 3D library needed |
+| UI Overlays | HTML/CSS | SEO-friendly, recruiter copy-pasteable, easy to style |
+| Module System | ES Modules (import/export) | Modern, no bundler needed for dev |
+| Art Style | Flat vector illustration | Clean, whimsical, small file sizes |
+| State Management | Simple class-based | No framework overhead |
+| Mobile Input | Virtual joystick (DOM overlay) | Natural touch interaction |
+| Audio | Web Audio API | Low latency, no library |
+| Bundling | None for dev, Optional Vite for prod | Keep it simple |
+
+---
+
+## Estimated Timeline
+
+| Phase | Time |
+|-------|------|
+| Phase 1 - Foundation and Engine | ~5h |
+| Phase 2 - World and Parallax | ~8.5h |
+| Phase 3 - Buildings and Projects | ~7h |
+| Phase 4 - NPCs and Living World | ~6.5h |
+| Phase 5 - Skills Park | ~3h |
+| Phase 6 - Day/Night Theme | ~4.5h |
+| Phase 7 - Mobile Support | ~4h |
+| Phase 8 - Polish and Performance | ~6h |
+| **Total** | **~44.5h** |
+
+---
+
+## Implementation Order Priority
+
+```mermaid
+gantt
+    title Implementation Priority
+    dateFormat X
+    axisFormat %s
+
+    section Critical Path
+    Phase 1 - Engine Core        :done, p1, 0, 5
+    Phase 2 - World Construction :active, p2, 5, 14
+    Phase 3 - Project System     :p3, 14, 21
+
+    section Experience Layer
+    Phase 4 - NPCs and Life      :p4, 21, 28
+    Phase 5 - Skills Park        :p5, 28, 31
+    Phase 6 - Day Night          :p6, 31, 36
+
+    section Polish
+    Phase 7 - Mobile             :p7, 36, 40
+    Phase 8 - Polish             :p8, 40, 46
+```
+
+---
+
+## Key Risk Mitigations
+
+> [!WARNING]
+> **Performance on mobile:** Canvas games can be CPU-intensive on low-end devices. Mitigate by: off-screen culling, reducing particle count, using requestAnimationFrame properly, and keeping sprite sizes reasonable.
+
+> [!WARNING]
+> **Asset loading time:** Multiple sprite sheets and backgrounds could slow initial load. Mitigate with: a loading screen, lazy-loading non-critical assets, and compressing all images to WebP.
+
+> [!CAUTION]
+> **Browser compatibility:** Test on Chrome, Firefox, Safari, and mobile browsers. Safari has specific Canvas performance quirks. Ensure touch events work alongside mouse events.
+
+---
+
+## Ready to Build?
+
+This plan is structured so each phase produces a **working, testable deliverable**. Phase 1 alone gives you a moving character. By Phase 3, you have a functional portfolio. Phases 4-8 add the magic that makes it memorable.
+
+**Shall I start building Phase 1?**

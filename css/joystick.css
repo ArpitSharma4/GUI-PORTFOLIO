@@ -1,0 +1,75 @@
+/* ============================================
+   MOBILE JOYSTICK & CONTROLS
+   ============================================ */
+
+.mobile-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: var(--z-mobile);
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    pointer-events: none;
+}
+
+.joystick-zone {
+    display: flex;
+    gap: 8px;
+    pointer-events: auto;
+}
+
+.joy-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    border: 2px solid var(--ui-border);
+    background: var(--ui-bg);
+    color: var(--ui-text);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px var(--ui-shadow);
+    opacity: 0.8;
+    transition: opacity 0.2s, transform 0.1s, background var(--transition-theme);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.joy-btn:active {
+    opacity: 1;
+    transform: scale(0.92);
+}
+
+.mobile-interact-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 3px solid var(--ui-accent);
+    background: var(--ui-accent);
+    color: white;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 4px 16px rgba(212, 119, 93, 0.3);
+    opacity: 0.85;
+    transition: opacity 0.2s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-interact-btn:active {
+    opacity: 1;
+    transform: scale(0.9);
+}
+
+/* Show mobile controls only on touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .mobile-controls.active {
+        display: flex !important;
+    }
+}

@@ -1,0 +1,208 @@
+/* ============================================
+   DESIGN TOKENS — Day & Night Themes
+   ============================================ */
+
+:root {
+    /* ---- Typography ---- */
+    --font-heading: 'Pixelify Sans', cursive;
+    --font-body: 'Quicksand', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+
+    /* ---- Layout ---- */
+    --world-width: 5500;
+    --ground-y: 0.72;            /* Ground Y as a fraction of canvas height */
+    --canvas-height: 100vh;
+
+    /* ---- Timing ---- */
+    --transition-theme: 1.5s;
+    --transition-fast: 0.25s;
+    --transition-normal: 0.4s;
+
+    /* ---- Z-Index layers (for HTML overlays) ---- */
+    --z-canvas: 1;
+    --z-hud: 10;
+    --z-prompt: 15;
+    --z-dialogue: 20;
+    --z-modal: 30;
+    --z-toggle: 25;
+    --z-mobile: 20;
+    --z-loading: 100;
+}
+
+/* ============================================
+   DAY THEME (Default)
+   ============================================ */
+[data-theme="day"] {
+    /* Sky */
+    --sky-top: #87CEEB;
+    --sky-bottom: #F0E6D3;
+
+    /* Ground */
+    --ground-color: #C4A882;
+    --ground-dark: #A89070;
+    --grass-color: #7CB342;
+    --grass-dark: #5B8A2A;
+    --path-color: #D4C4A8;
+    --path-line: #B8A88C;
+
+    /* Buildings */
+    --house-wall-1: #F4D9A0;
+    --house-wall-2: #E8B4A0;
+    --house-wall-3: #A8D5BA;
+    --house-wall-4: #C5B8D9;
+    --house-roof: #8B5E3C;
+    --house-door: #6D4C33;
+    --house-window: #87CEEB;
+    --house-window-glow: transparent;
+    --dell-glass: rgba(135, 206, 235, 0.35);
+    --dell-frame: #607D8B;
+
+    /* Character */
+    --char-body: #FF8A65;
+    --char-skin: #FFCC80;
+    --char-hair: #5D4037;
+    --char-shadow: rgba(0, 0, 0, 0.15);
+    --char-glow: transparent;
+
+    /* Environment */
+    --tree-trunk: #6D4C33;
+    --tree-leaves: #66BB6A;
+    --tree-leaves-dark: #4CAF50;
+    --flower-1: #EF5350;
+    --flower-2: #FFD54F;
+    --flower-3: #CE93D8;
+    --fence-color: #F5F0E8;
+    --fence-shadow: #D5D0C8;
+    --lamp-post: #546E7A;
+    --lamp-light: transparent;
+    --lamp-glow: transparent;
+
+    /* Celestial */
+    --sun-color: #FFD54F;
+    --sun-glow: rgba(255, 213, 79, 0.3);
+    --moon-color: transparent;
+    --moon-glow: transparent;
+    --star-color: transparent;
+
+    /* Clouds */
+    --cloud-color: rgba(255, 255, 255, 0.85);
+    --cloud-shadow: rgba(200, 200, 210, 0.3);
+
+    /* UI */
+    --ui-bg: #FFF8E7;
+    --ui-bg-alt: #F5ECD7;
+    --ui-border: #D4C4A0;
+    --ui-shadow: rgba(62, 39, 35, 0.12);
+    --ui-text: #3E2723;
+    --ui-text-secondary: #5D4037;
+    --ui-accent: #D4775D;
+    --ui-accent-hover: #C2614A;
+    --ui-button-bg: #E8D5B0;
+    --ui-button-text: #3E2723;
+    --ui-pill-bg: rgba(124, 179, 66, 0.15);
+    --ui-pill-text: #558B2F;
+    --ui-overlay: rgba(240, 230, 211, 0.85);
+
+    /* Particles */
+    --particle-leaf: #8BC34A;
+    --particle-bird: #5D4037;
+    --firefly-color: transparent;
+
+    /* NPC */
+    --speech-bg: #FFF8E7;
+    --speech-border: #D4C4A0;
+    --speech-text: #3E2723;
+
+    /* Misc */
+    --grain-opacity: 0.03;
+    --vignette-opacity: 0;
+}
+
+/* ============================================
+   NIGHT THEME
+   ============================================ */
+[data-theme="night"] {
+    /* Sky */
+    --sky-top: #0B1026;
+    --sky-bottom: #1A1A3E;
+
+    /* Ground */
+    --ground-color: #4A3728;
+    --ground-dark: #3A2A1E;
+    --grass-color: #3D5A3D;
+    --grass-dark: #2D4A2D;
+    --path-color: #5A4A38;
+    --path-line: #4A3A28;
+
+    /* Buildings */
+    --house-wall-1: #8B7355;
+    --house-wall-2: #7A5C5C;
+    --house-wall-3: #5A7A6A;
+    --house-wall-4: #6A5E7A;
+    --house-roof: #5A3D28;
+    --house-door: #4A3322;
+    --house-window: #2A3A4A;
+    --house-window-glow: rgba(255, 224, 130, 0.6);
+    --dell-glass: rgba(30, 50, 70, 0.5);
+    --dell-frame: #37474F;
+
+    /* Character */
+    --char-body: #CC6E50;
+    --char-skin: #DDA870;
+    --char-hair: #3E2723;
+    --char-shadow: rgba(0, 0, 0, 0.3);
+    --char-glow: rgba(255, 204, 128, 0.15);
+
+    /* Environment */
+    --tree-trunk: #4A3322;
+    --tree-leaves: #3D6B40;
+    --tree-leaves-dark: #2E5630;
+    --flower-1: #A63E3B;
+    --flower-2: #BFA03A;
+    --flower-3: #8E6598;
+    --fence-color: #7A7068;
+    --fence-shadow: #5A5048;
+    --lamp-post: #37474F;
+    --lamp-light: #FFE082;
+    --lamp-glow: rgba(255, 224, 130, 0.25);
+
+    /* Celestial */
+    --sun-color: transparent;
+    --sun-glow: transparent;
+    --moon-color: #E8E0D0;
+    --moon-glow: rgba(232, 224, 208, 0.15);
+    --star-color: rgba(255, 255, 255, 0.7);
+
+    /* Clouds */
+    --cloud-color: rgba(40, 40, 65, 0.5);
+    --cloud-shadow: rgba(20, 20, 40, 0.3);
+
+    /* UI */
+    --ui-bg: #1E1A2E;
+    --ui-bg-alt: #252040;
+    --ui-border: #3A3555;
+    --ui-shadow: rgba(0, 0, 0, 0.3);
+    --ui-text: #E8E0D5;
+    --ui-text-secondary: #B0A8A0;
+    --ui-accent: #FFD54F;
+    --ui-accent-hover: #FFCA28;
+    --ui-button-bg: #2E2850;
+    --ui-button-text: #E8E0D5;
+    --ui-pill-bg: rgba(255, 213, 79, 0.12);
+    --ui-pill-text: #FFD54F;
+    --ui-overlay: rgba(11, 16, 38, 0.9);
+
+    /* Particles */
+    --particle-leaf: transparent;
+    --particle-bird: transparent;
+    --firefly-color: #FFD54F;
+
+    /* NPC */
+    --speech-bg: #1E1A2E;
+    --speech-border: #3A3555;
+    --speech-text: #E8E0D5;
+
+    /* Misc */
+    --grain-opacity: 0.05;
+    --vignette-opacity: 0.3;
+}

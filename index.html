@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Arpit's Portfolio — Explore My Neighborhood</title>
+    <meta name="description"
+        content="An interactive 2D portfolio world. Walk through Arpit's neighborhood to discover projects, skills, and experience.">
+    <meta property="og:title" content="Arpit's Portfolio — Explore My Neighborhood">
+    <meta property="og:description"
+        content="A playable 2D side-scrolling portfolio. Explore projects, skills, and work experience in an animated neighborhood world.">
+    <meta property="og:type" content="website">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Quicksand:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/ui.css">
+    <link rel="stylesheet" href="css/joystick.css">
+    <link rel="stylesheet" href="css/transitions.css">
+</head>
+
+<body>
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-content">
+            <h1 class="loader-title">Arpit's Neighborhood</h1>
+            <div class="loader-bar-track">
+                <div class="loader-bar-fill" id="loader-bar"></div>
+            </div>
+            <p class="loader-hint">Loading the neighborhood...</p>
+        </div>
+    </div>
+
+    <!-- HUD Overlay -->
+    <div id="hud" class="hud hidden">
+        <div class="hud-controls">
+            <span class="hud-key">← →</span> Move
+            <span class="hud-separator">|</span>
+            <span class="hud-key">Shift</span> Sprint
+            <span class="hud-separator">|</span>
+            <span class="hud-key">Space</span> Jump
+            <span class="hud-separator">|</span>
+            <span class="hud-key">E</span> Interact
+            <span class="hud-separator">|</span>
+            <span class="hud-key">T</span> Day/Night
+        </div>
+    </div>
+
+    <!-- Interaction Prompt -->
+    <div id="interact-prompt" class="interact-prompt hidden">
+        <span class="prompt-key">E</span>
+        <span class="prompt-text">Interact</span>
+    </div>
+
+    <!-- Dialogue Box -->
+    <div id="dialogue-box" class="dialogue-box hidden">
+        <div class="dialogue-inner">
+            <div class="dialogue-header">
+                <span class="dialogue-npc-name" id="dialogue-npc-name">NPC</span>
+                <button class="dialogue-close" id="dialogue-close">✕</button>
+            </div>
+            <div class="dialogue-body">
+                <p class="dialogue-text" id="dialogue-text"></p>
+            </div>
+            <div class="dialogue-actions" id="dialogue-actions"></div>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="project-modal" class="project-modal hidden">
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-content">
+            <button class="modal-close" id="modal-close">✕</button>
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Project Title</h2>
+                <div class="modal-tech-stack" id="modal-tech-stack"></div>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p class="modal-description" id="modal-description"></p>
+                <div class="modal-image-area" id="modal-image-area"></div>
+            </div>
+            <div class="modal-footer" id="modal-footer">
+                <a class="modal-btn modal-btn-github" id="modal-btn-github" href="#" target="_blank">
+                    GitHub
+                </a>
+                <a class="modal-btn modal-btn-live" id="modal-btn-live" href="#" target="_blank">
+                    Live Demo
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top-right buttons -->
+    <div class="top-buttons">
+        <button id="audio-toggle" class="theme-toggle" aria-label="Toggle audio">
+            <span class="toggle-icon" id="audio-icon">🔊</span>
+        </button>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle day/night mode">
+            <span class="toggle-icon" id="toggle-icon">🌙</span>
+        </button>
+    </div>
+
+    <!-- Mobile Controls -->
+    <div id="mobile-controls" class="mobile-controls hidden">
+        <div class="joystick-zone" id="joystick-zone">
+            <button class="joy-btn joy-left" id="joy-left" aria-label="Move left">◀</button>
+            <button class="joy-btn joy-right" id="joy-right" aria-label="Move right">▶</button>
+        </div>
+        <div class="mobile-action-btns">
+            <button class="joy-btn mobile-jump-btn" id="mobile-jump" aria-label="Jump">↑</button>
+            <button class="joy-btn mobile-sprint-btn" id="mobile-sprint" aria-label="Sprint">⚡</button>
+            <button class="mobile-interact-btn" id="mobile-interact" aria-label="Interact">E</button>
+        </div>
+    </div>
+
+    <!-- Main Game Script (ES Module) -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
