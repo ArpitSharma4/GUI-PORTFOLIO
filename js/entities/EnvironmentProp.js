@@ -1,13 +1,11 @@
-/**
- * EnvironmentProp.js — Decorative world elements.
- * Trees, fences, flowers, lamps, signs, benches.
- * All drawn procedurally on canvas.
- */
+import { WORLD_CONFIG } from '../world/worldData.js';
+
 export class EnvironmentProp {
     /**
-     * Draw a stylized tree
+     * Draw a stylized tree with seasonal colors
      */
-    static drawTree(ctx, x, groundY, size, nightT, time) {
+    static drawTree(ctx, x, groundY, size, nightT, time, season = 'summer') {
+        const palette = WORLD_CONFIG.seasons[season] || WORLD_CONFIG.seasons.summer;
         const trunkH = 50 * size;
         const canopyR = 25 * size;
         const sway = Math.sin(time * 1.5 + x * 0.01) * 2 * size;
@@ -23,11 +21,12 @@ export class EnvironmentProp {
         ctx.fillRect(x - 4 * size, groundY - trunkH, 8 * size, trunkH);
 
         // Canopy
-        const leafDay = [102, 187, 106];
-        const leafNight = [61, 107, 64];
-        const lr = Math.round(leafDay[0] + (leafNight[0] - leafDay[0]) * nightT);
-        const lg = Math.round(leafDay[1] + (leafNight[1] - leafDay[1]) * nightT);
-        const lb = Math.round(leafDay[2] + (leafNight[2] - leafDay[2]) * nightT);
+        const leafColor = this._hexToRgb(palette.leaves);
+        const leafDarkColor = this._hexToRgb(palette.leavesDark);
+
+        const lr = Math.round(leafColor.r * (1 - nightT * 0.4));
+        const lg = Math.round(leafColor.g * (1 - nightT * 0.4));
+        const lb = Math.round(leafColor.b * (1 - nightT * 0.4));
 
         ctx.fillStyle = `rgb(${lr}, ${lg}, ${lb})`;
         ctx.beginPath();
@@ -35,10 +34,22 @@ export class EnvironmentProp {
         ctx.fill();
 
         // Darker canopy layer
-        ctx.fillStyle = `rgb(${Math.max(0, lr - 20)}, ${Math.max(0, lg - 20)}, ${Math.max(0, lb - 10)})`;
+        const ldr = Math.round(leafDarkColor.r * (1 - nightT * 0.4));
+        const ldg = Math.round(leafDarkColor.g * (1 - nightT * 0.4));
+        const ldb = Math.round(leafDarkColor.b * (1 - nightT * 0.4));
+
+        ctx.fillStyle = `rgb(${ldr}, ${ldg}, ${ldb})`;
         ctx.beginPath();
         ctx.ellipse(x + sway - 5 * size, groundY - trunkH - canopyR * 0.3, canopyR * 0.7, canopyR * 0.65, 0, 0, Math.PI * 2);
         ctx.fill();
+
+        // Winter snow cap
+        if (season === 'winter') {
+            ctx.fillStyle = `rgba(255, 255, 255, ${0.9 * (1 - nightT * 0.3)})`;
+            ctx.beginPath();
+            ctx.ellipse(x + sway, groundY - trunkH - canopyR * 0.8, canopyR * 0.8, canopyR * 0.4, 0, Math.PI, Math.PI * 2);
+            ctx.fill();
+        }
     }
 
     /**
@@ -79,10 +90,11 @@ export class EnvironmentProp {
     }
 
     /**
-     * Draw a cluster of flowers
+     * Draw a cluster of flowers with seasonal check
      */
-    static drawFlowers(ctx, x, groundY, count, spread, nightT, time) {
-        const colors = ['#EF5350', '#FFD54F', '#CE93D8', '#FF8A65', '#81C784'];
+    static drawFlowers(ctx, x, groundY, count, spread, nightT, time, season = 'summer') {
+        const palette = WORLD_CONFIG.seasons[season] || WORLD_CONFIG.seasons.summer;
+        const colors = palette.particles; // Use seasonal particle colors for flowers
 
         for (let i = 0; i < count; i++) {
             const fx = x + (i - count / 2) * spread * 0.6 + Math.sin(i * 137.5) * spread * 0.3;
@@ -114,6 +126,16 @@ export class EnvironmentProp {
             ctx.globalAlpha = 1;
         }
     }
+
+    static _hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 255, g: 255, b: 255 };
+    }
+
 
     /**
      * Draw a street lamp

@@ -6,7 +6,7 @@ export class ParallaxLayer {
     /**
      * @param {number} scrollFactor — 0.0 (no scroll) to 1.0 (full camera speed)
      * @param {string} drawType — 'mountains', 'hills', or 'trees'
-     * @param {object} colors — { fill, shadow } color strings
+     * @param {object} colors — { fill, nightFill, trunk, nightTrunk } color strings
      */
     constructor(scrollFactor, drawType, colors) {
         this.scrollFactor = scrollFactor;
@@ -16,6 +16,10 @@ export class ParallaxLayer {
         // Pre-generate the shape data
         this.shapes = [];
         this._generateShapes();
+    }
+
+    setColors(colors) {
+        this.colors = colors;
     }
 
     _generateShapes() {
@@ -88,9 +92,12 @@ export class ParallaxLayer {
 
     _renderMountains(ctx, totalWidth, h, groundY, nt) {
         const baseY = groundY - 20;
-        const r = this._lerp(parseInt(this.colors.fill.slice(1, 3), 16), parseInt(this.colors.nightFill.slice(1, 3), 16), nt);
-        const g = this._lerp(parseInt(this.colors.fill.slice(3, 5), 16), parseInt(this.colors.nightFill.slice(3, 5), 16), nt);
-        const b = this._lerp(parseInt(this.colors.fill.slice(5, 7), 16), parseInt(this.colors.nightFill.slice(5, 7), 16), nt);
+        const color = this._hexToRgb(this.colors.fill);
+        const nightColor = this._hexToRgb(this.colors.nightFill);
+
+        const r = this._lerp(color.r, nightColor.r, nt);
+        const g = this._lerp(color.g, nightColor.g, nt);
+        const b = this._lerp(color.b, nightColor.b, nt);
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.beginPath();
@@ -115,9 +122,12 @@ export class ParallaxLayer {
 
     _renderHills(ctx, totalWidth, h, groundY, nt) {
         const baseY = groundY - 5;
-        const r = this._lerp(parseInt(this.colors.fill.slice(1, 3), 16), parseInt(this.colors.nightFill.slice(1, 3), 16), nt);
-        const g = this._lerp(parseInt(this.colors.fill.slice(3, 5), 16), parseInt(this.colors.nightFill.slice(3, 5), 16), nt);
-        const b = this._lerp(parseInt(this.colors.fill.slice(5, 7), 16), parseInt(this.colors.nightFill.slice(5, 7), 16), nt);
+        const color = this._hexToRgb(this.colors.fill);
+        const nightColor = this._hexToRgb(this.colors.nightFill);
+
+        const r = this._lerp(color.r, nightColor.r, nt);
+        const g = this._lerp(color.g, nightColor.g, nt);
+        const b = this._lerp(color.b, nightColor.b, nt);
 
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.beginPath();
@@ -129,7 +139,6 @@ export class ParallaxLayer {
             const peakY = baseY - shape.height * h;
             const hw = shape.width * totalWidth;
 
-            // Use quadratic curves for rolling hills
             const cpX = sx;
             const cpY = peakY;
             ctx.quadraticCurveTo(cpX, cpY, sx + hw, baseY);
@@ -144,13 +153,18 @@ export class ParallaxLayer {
 
     _renderTrees(ctx, totalWidth, h, groundY, nt) {
         const baseY = groundY;
-        const trunkR = this._lerp(parseInt(this.colors.trunk.slice(1, 3), 16), parseInt(this.colors.nightTrunk.slice(1, 3), 16), nt);
-        const trunkG = this._lerp(parseInt(this.colors.trunk.slice(3, 5), 16), parseInt(this.colors.nightTrunk.slice(3, 5), 16), nt);
-        const trunkB = this._lerp(parseInt(this.colors.trunk.slice(5, 7), 16), parseInt(this.colors.nightTrunk.slice(5, 7), 16), nt);
+        const color = this._hexToRgb(this.colors.fill);
+        const nightColor = this._hexToRgb(this.colors.nightFill);
+        const trunkColor = this._hexToRgb(this.colors.trunk);
+        const nightTrunkColor = this._hexToRgb(this.colors.nightTrunk);
 
-        const leafR = this._lerp(parseInt(this.colors.fill.slice(1, 3), 16), parseInt(this.colors.nightFill.slice(1, 3), 16), nt);
-        const leafG = this._lerp(parseInt(this.colors.fill.slice(3, 5), 16), parseInt(this.colors.nightFill.slice(3, 5), 16), nt);
-        const leafB = this._lerp(parseInt(this.colors.fill.slice(5, 7), 16), parseInt(this.colors.nightFill.slice(5, 7), 16), nt);
+        const trunkR = this._lerp(trunkColor.r, nightTrunkColor.r, nt);
+        const trunkG = this._lerp(trunkColor.g, nightTrunkColor.g, nt);
+        const trunkB = this._lerp(trunkColor.b, nightTrunkColor.b, nt);
+
+        const leafR = this._lerp(color.r, nightColor.r, nt);
+        const leafG = this._lerp(color.g, nightColor.g, nt);
+        const leafB = this._lerp(color.b, nightColor.b, nt);
 
         for (const shape of this.shapes) {
             const tx = shape.x * totalWidth;
@@ -158,11 +172,9 @@ export class ParallaxLayer {
             const tw = shape.trunk * totalWidth;
             const canopy = shape.canopySize * totalWidth;
 
-            // Trunk
             ctx.fillStyle = `rgb(${trunkR}, ${trunkG}, ${trunkB})`;
             ctx.fillRect(tx - tw, baseY - trunkH, tw * 2, trunkH);
 
-            // Canopy
             ctx.fillStyle = `rgb(${leafR}, ${leafG}, ${leafB})`;
             ctx.beginPath();
             ctx.ellipse(tx, baseY - trunkH - canopy * 0.3, canopy, canopy * 0.8, 0, 0, Math.PI * 2);
@@ -172,5 +184,15 @@ export class ParallaxLayer {
 
     _lerp(a, b, t) {
         return Math.round(a + (b - a) * t);
+    }
+
+    _hexToRgb(hex) {
+        if (!hex) return { r: 255, g: 255, b: 255 };
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 255, g: 255, b: 255 };
     }
 }

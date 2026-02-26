@@ -1,7 +1,5 @@
-/**
- * ParticleSystem.js — Handles leaves, fireflies, and birds.
- * Switches particle type based on day/night theme.
- */
+import { WORLD_CONFIG } from '../world/worldData.js';
+
 export class ParticleSystem {
     constructor(canvasWidth, canvasHeight, worldWidth) {
         this.canvasWidth = canvasWidth;
@@ -11,9 +9,9 @@ export class ParticleSystem {
 
         this.particles = [];
         this.isNight = false;
+        this.currentSeason = 'summer';
         this.maxParticles = 40;
 
-        // Initialize with day particles
         this._spawnInitial();
     }
 
@@ -32,30 +30,37 @@ export class ParticleSystem {
     }
 
     _createLeaf() {
+        const palette = WORLD_CONFIG.seasons[this.currentSeason] || WORLD_CONFIG.seasons.summer;
+        const colors = palette.particles;
+        const isWinter = this.currentSeason === 'winter';
+
         return {
-            type: 'leaf',
+            type: isWinter ? 'snow' : 'leaf',
             x: Math.random() * this.worldWidth,
-            y: Math.random() * this.groundY * 0.8,
-            size: 2 + Math.random() * 3,
-            speedX: 10 + Math.random() * 20,
-            speedY: 5 + Math.random() * 15,
+            y: Math.random() * this.groundY * 1.2 - 100,
+            size: isWinter ? 1.5 + Math.random() * 2 : 2 + Math.random() * 3,
+            speedX: isWinter ? -5 + Math.random() * 10 : 10 + Math.random() * 20,
+            speedY: isWinter ? 15 + Math.random() * 25 : 5 + Math.random() * 15,
             rotation: Math.random() * Math.PI * 2,
-            rotSpeed: 1 + Math.random() * 3,
+            rotSpeed: isWinter ? 0 : 1 + Math.random() * 3,
             wobble: Math.random() * Math.PI * 2,
             alpha: 0.4 + Math.random() * 0.4,
-            color: ['#8BC34A', '#AED581', '#C5E1A5', '#FFD54F'][Math.floor(Math.random() * 4)]
+            color: colors[Math.floor(Math.random() * colors.length)]
         };
     }
 
     _createBird() {
         const goingRight = Math.random() > 0.5;
+        // Winter has fewer birds
+        if (this.currentSeason === 'winter' && Math.random() > 0.3) return this._createLeaf();
+
         return {
             type: 'bird',
             x: goingRight ? -20 : this.worldWidth + 20,
             y: 30 + Math.random() * this.groundY * 0.3,
             speedX: (goingRight ? 1 : -1) * (40 + Math.random() * 60),
             wingCycle: Math.random() * Math.PI * 2,
-            wingSpeed: 5 + Math.random() * 5,
+            wingSpeed: 5 + Math.random() * 2,
             size: 3 + Math.random() * 2,
             alpha: 0.5 + Math.random() * 0.3
         };
@@ -85,8 +90,13 @@ export class ParticleSystem {
     setNightMode(isNight) {
         if (this.isNight !== isNight) {
             this.isNight = isNight;
-            // Gradually replace particles
-            this.particles = [];
+            this._spawnInitial();
+        }
+    }
+
+    setSeason(season) {
+        if (this.currentSeason !== season) {
+            this.currentSeason = season;
             this._spawnInitial();
         }
     }
@@ -97,14 +107,15 @@ export class ParticleSystem {
 
             switch (p.type) {
                 case 'leaf':
+                case 'snow':
                     p.x += p.speedX * dt;
                     p.y += p.speedY * dt + Math.sin(p.wobble) * 8 * dt;
                     p.rotation += p.rotSpeed * dt;
                     p.wobble += dt * 2;
 
-                    // Reset when off-screen
-                    if (p.y > this.groundY || p.x > this.worldWidth + 50) {
-                        p.x = Math.random() * this.worldWidth;
+                    if (p.y > this.groundY || p.x > this.worldWidth + 50 || p.x < -50) {
+                        const next = this._createLeaf();
+                        Object.assign(p, next);
                         p.y = -10;
                     }
                     break;
@@ -114,32 +125,23 @@ export class ParticleSystem {
                     p.wingCycle += p.wingSpeed * dt;
                     p.y += Math.sin(p.wingCycle * 0.3) * 5 * dt;
 
-                    // Reset when off-screen
-                    if (p.speedX > 0 && p.x > this.worldWidth + 50) {
-                        p.x = -20;
-                        p.y = 30 + Math.random() * this.groundY * 0.3;
-                    } else if (p.speedX < 0 && p.x < -50) {
-                        p.x = this.worldWidth + 20;
-                        p.y = 30 + Math.random() * this.groundY * 0.3;
+                    if ((p.speedX > 0 && p.x > this.worldWidth + 50) || (p.speedX < 0 && p.x < -50)) {
+                        const next = this._createBird();
+                        Object.assign(p, next);
                     }
                     break;
 
                 case 'firefly':
                     p.pulseCycle += p.pulseSpeed * dt;
                     p.alpha = 0.3 + 0.7 * Math.max(0, Math.sin(p.pulseCycle));
-
                     p.x += p.speedX * dt;
                     p.y += p.speedY * dt;
-
-                    // Random direction changes
                     p.changeTimer -= dt;
                     if (p.changeTimer <= 0) {
                         p.speedX = -5 + Math.random() * 10;
                         p.speedY = -5 + Math.random() * 10;
                         p.changeTimer = 2 + Math.random() * 4;
                     }
-
-                    // Keep in bounds
                     if (p.x < 0) p.x = this.worldWidth;
                     if (p.x > this.worldWidth) p.x = 0;
                     if (p.y < this.groundY * 0.2) p.speedY = Math.abs(p.speedY);
@@ -149,17 +151,22 @@ export class ParticleSystem {
         }
     }
 
-    /**
-     * Render particles (Layer 9 — in front of everything)
-     */
     render(ctx, camera) {
         camera.applyTransform(ctx);
 
         for (const p of this.particles) {
-            // Culling
-            if (!camera.isVisible(p.x - 10, p.y - 10, 20, 20)) continue;
+            if (!camera.isVisible(p.x - 20, p.y - 20, 40, 40)) continue;
 
             switch (p.type) {
+                case 'snow':
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+                    break;
+
                 case 'leaf':
                     ctx.save();
                     ctx.translate(p.x, p.y);
@@ -169,8 +176,8 @@ export class ParticleSystem {
                     ctx.beginPath();
                     ctx.ellipse(0, 0, p.size, p.size * 0.5, 0, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.globalAlpha = 1;
                     ctx.restore();
+                    ctx.globalAlpha = 1;
                     break;
 
                 case 'bird':
@@ -181,24 +188,21 @@ export class ParticleSystem {
                     ctx.strokeStyle = '#5D4037';
                     ctx.lineWidth = 1.5;
                     ctx.lineCap = 'round';
-                    // Left wing
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
                     ctx.quadraticCurveTo(-p.size, -p.size + wingY, -p.size * 2, wingY);
                     ctx.stroke();
-                    // Right wing
                     ctx.beginPath();
                     ctx.moveTo(0, 0);
                     ctx.quadraticCurveTo(p.size, -p.size + wingY, p.size * 2, wingY);
                     ctx.stroke();
-                    ctx.globalAlpha = 1;
                     ctx.restore();
+                    ctx.globalAlpha = 1;
                     break;
 
                 case 'firefly':
                     ctx.save();
                     ctx.globalAlpha = p.alpha;
-                    // Glow
                     const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 6);
                     glow.addColorStop(0, `rgba(255, 213, 79, ${p.alpha * 0.3})`);
                     glow.addColorStop(1, 'rgba(255, 213, 79, 0)');
@@ -206,13 +210,12 @@ export class ParticleSystem {
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size * 6, 0, Math.PI * 2);
                     ctx.fill();
-                    // Core
                     ctx.fillStyle = `rgba(255, 213, 79, ${p.alpha})`;
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
                     ctx.fill();
-                    ctx.globalAlpha = 1;
                     ctx.restore();
+                    ctx.globalAlpha = 1;
                     break;
             }
         }

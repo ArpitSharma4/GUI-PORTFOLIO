@@ -9,6 +9,7 @@ import { CollisionSystem } from './engine/CollisionSystem.js';
 import { Player } from './entities/Player.js';
 import { WorldBuilder } from './world/WorldBuilder.js';
 import { ThemeManager } from './systems/ThemeManager.js';
+import { SeasonManager } from './systems/SeasonManager.js';
 import { DialogueSystem } from './systems/DialogueSystem.js';
 import { ModalSystem } from './systems/ModalSystem.js';
 import { ParticleSystem } from './systems/ParticleSystem.js';
@@ -48,6 +49,7 @@ const input = new InputManager();
 const camera = new Camera(canvasW, canvasH, WORLD_CONFIG.width);
 const collision = new CollisionSystem(WORLD_CONFIG.width, groundY);
 const themeManager = new ThemeManager();
+const seasonManager = new SeasonManager();
 const dialogueSystem = new DialogueSystem();
 const audio = new AudioManager();
 const modalSystem = new ModalSystem(camera);
@@ -85,9 +87,9 @@ if (audioToggle) {
 // ==================================================
 // Player Audio Callbacks
 // ==================================================
-player.onJump = () => audio.playJump();
-player.onLand = () => audio.playLand();
-player.onStep = (isSprinting) => audio.playFootstep(isSprinting);
+player.onJump = () => audio.play('jump');
+player.onLand = () => audio.play('land');
+player.onStep = (isSprinting) => audio.play('footstep', { isSprinting });
 
 // ==================================================
 // Theme Change Handler
@@ -97,7 +99,18 @@ themeManager.onThemeChange((isNight) => {
     player.setNightMode(isNight);
     particles.setNightMode(isNight);
     audio.setNightMode(isNight);
-    audio.playThemeSwitch();
+    audio.play('theme-switch');
+});
+
+// ==================================================
+// Season Change Handler
+// ==================================================
+seasonManager.onSeasonChange((season) => {
+    world.setSeason(season);
+    particles.setSeason(season);
+    audio.setSeason(season);
+    player.setSeason(season);
+    audio.play('theme-switch'); // Use same shimmer for season switch
 });
 
 // ==================================================
@@ -105,7 +118,7 @@ themeManager.onThemeChange((isNight) => {
 // ==================================================
 dialogueSystem.onEnterProject = (building) => {
     modalSystem.open(building);
-    audio.playModalOpen();
+    audio.play('modal-open');
 };
 
 // ==================================================
@@ -155,7 +168,7 @@ function gameUpdate(dt) {
     if (modalSystem.isOpen) {
         if (input.isClosePressed()) {
             modalSystem.close();
-            audio.playClose();
+            audio.play('close');
         }
         input.endFrame();
         return;
@@ -164,7 +177,7 @@ function gameUpdate(dt) {
     if (dialogueSystem.isOpen) {
         if (input.isClosePressed() || input.isInteractPressed()) {
             dialogueSystem.close();
-            audio.playClose();
+            audio.play('close');
         }
         input.endFrame();
         return;
@@ -198,7 +211,7 @@ function gameUpdate(dt) {
 
         if (input.isInteractPressed()) {
             dialogueSystem.openBuilding(interaction.data);
-            audio.playInteract();
+            audio.play('interact');
             hideInteractPrompt();
         }
     } else {

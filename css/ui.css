@@ -377,37 +377,59 @@
     }
 }
 
-/* ---- Top-right Button Group ---- */
+/* ----/* Top right buttons container */
 .top-buttons {
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: var(--z-toggle);
     display: flex;
     gap: 12px;
+    align-items: center;
+    z-index: var(--z-toggle);
 }
 
-.theme-toggle {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 2px solid var(--ui-border);
+#theme-toggle,
+#audio-toggle,
+#season-toggle {
     background: var(--ui-bg);
+    border: 2px solid var(--ui-border);
+    border-radius: 12px;
     cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 0 var(--ui-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 16px var(--ui-shadow);
-    transition: background var(--transition-theme), border-color var(--transition-theme), transform 0.2s;
 }
 
-.theme-toggle:hover {
-    transform: scale(1.08);
+#audio-toggle,
+#season-toggle {
+    width: 44px;
+    height: 44px;
+    padding: 0;
 }
 
-.theme-toggle:active {
-    transform: scale(0.95);
+#theme-toggle:hover,
+#audio-toggle:hover,
+#season-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 var(--ui-shadow);
+    background: var(--ui-bg-alt);
 }
+
+#theme-toggle:active,
+#audio-toggle:active,
+#season-toggle:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 var(--ui-shadow);
+}
+
+#theme-toggle {
+    width: 80px;
+    height: 44px;
+    padding: 2px;
+}
+
 
 .toggle-icon {
     font-size: 1.4rem;

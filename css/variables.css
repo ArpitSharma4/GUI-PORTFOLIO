@@ -10,7 +10,8 @@
 
     /* ---- Layout ---- */
     --world-width: 5500;
-    --ground-y: 0.72;            /* Ground Y as a fraction of canvas height */
+    --ground-y: 0.72;
+    /* Ground Y as a fraction of canvas height */
     --canvas-height: 100vh;
 
     /* ---- Timing ---- */
@@ -205,4 +206,57 @@
     /* Misc */
     --grain-opacity: 0.05;
     --vignette-opacity: 0.3;
+}
+
+/* ============================================
+   SEASONAL OVERRIDES
+   ============================================ */
+
+/* ---- Spring: Pink blossoms & vibrant lime ---- */
+[data-season="spring"] {
+    --grass-color: #9CCC65;
+    --tree-leaves: #F48FB1;
+    /* Pink blossoms */
+    --tree-leaves-dark: #F06292;
+    --flower-1: #F06292;
+    --flower-2: #FFF176;
+    --flower-3: #BA68C8;
+    --ui-pill-bg: rgba(244, 143, 177, 0.15);
+    --ui-pill-text: #AD1457;
+}
+
+/* ---- Autumn: Orange, Red & Gold ---- */
+[data-season="autumn"] {
+    --grass-color: #9E9D24;
+    --ground-color: #8D6E63;
+    --tree-leaves: #E64A19;
+    --tree-leaves-dark: #BF360C;
+    --flower-1: #D84315;
+    --flower-2: #FF8F00;
+    --flower-3: #6D4C33;
+    --particle-leaf: #E64A19;
+}
+
+/* ---- Winter: Snow & Ice ---- */
+[data-season="winter"] {
+    --grass-color: #E0F2F1;
+    /* Snowy white-blue */
+    --grass-dark: #B2DFDB;
+    --ground-color: #B2EBF2;
+    --path-color: #E1F5FE;
+    --tree-leaves: #FFFFFF;
+    --tree-leaves-dark: #E0E0E0;
+    --flower-1: #81D4FA;
+    --flower-2: #E1F5FE;
+    --flower-3: #B3E5FC;
+    --sky-top: #E1F5FE;
+    --sky-bottom: #FFFFFF;
+}
+
+[data-season="winter"][data-theme="night"] {
+    --sky-top: #1A237E;
+    --sky-bottom: #0D47A1;
+    --grass-color: #455A64;
+    --grass-dark: #37474F;
+    --tree-leaves: #90A4AE;
 }

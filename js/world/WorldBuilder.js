@@ -28,6 +28,7 @@ export class WorldBuilder {
         // Night transition
         this.nightT = 0;
         this.totalTime = 0;
+        this.currentSeason = 'summer';
 
         this._build();
     }
@@ -42,24 +43,9 @@ export class WorldBuilder {
 
         // --- Parallax layers ---
         this.parallaxLayers = [
-            new ParallaxLayer(0.15, 'mountains', {
-                fill: '#90A4AE',
-                nightFill: '#2E3440',
-                trunk: '#6D4C33',
-                nightTrunk: '#3A2818'
-            }),
-            new ParallaxLayer(0.35, 'hills', {
-                fill: '#A5D6A7',
-                nightFill: '#2E4A30',
-                trunk: '#6D4C33',
-                nightTrunk: '#3A2818'
-            }),
-            new ParallaxLayer(0.55, 'trees', {
-                fill: '#81C784',
-                nightFill: '#2D5A30',
-                trunk: '#6D4C33',
-                nightTrunk: '#3A2818'
-            })
+            new ParallaxLayer(0.15, 'mountains', this._getParallaxColors('mountains', this.currentSeason)),
+            new ParallaxLayer(0.35, 'hills', this._getParallaxColors('hills', this.currentSeason)),
+            new ParallaxLayer(0.55, 'trees', this._getParallaxColors('trees', this.currentSeason))
         ];
 
         // --- Buildings ---
@@ -70,6 +56,46 @@ export class WorldBuilder {
 
         // --- Skills ---
         this.skills = SKILLS.map(data => new SkillIcon(data, gy));
+    }
+
+    _getParallaxColors(type, season) {
+        const p = WORLD_CONFIG.seasons[season] || WORLD_CONFIG.seasons.summer;
+        if (type === 'mountains') {
+            return {
+                fill: season === 'winter' ? '#B0BEC5' : '#90A4AE',
+                nightFill: '#1A1C2C',
+                trunk: '#6D4C33',
+                nightTrunk: '#3A2818'
+            };
+        } else if (type === 'hills') {
+            return {
+                fill: p.grass,
+                nightFill: this._darken(p.grass, 0.4),
+                trunk: '#6D4C33',
+                nightTrunk: '#3A2818'
+            };
+        } else { // trees
+            return {
+                fill: p.leaves,
+                nightFill: p.leavesDark,
+                trunk: '#6D4C33',
+                nightTrunk: '#3A2818'
+            };
+        }
+    }
+
+    _darken(hex, amount) {
+        const rgb = this._hexToRgb(hex);
+        return `rgb(${Math.round(rgb.r * (1 - amount))}, ${Math.round(rgb.g * (1 - amount))}, ${Math.round(rgb.b * (1 - amount))})`;
+    }
+
+    _hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 0, g: 0, b: 0 };
     }
 
     /**
@@ -86,6 +112,19 @@ export class WorldBuilder {
         for (const b of this.buildings) b.groundY = this.groundY;
         for (const n of this.npcs) n.groundY = this.groundY;
         for (const s of this.skills) s.groundY = this.groundY;
+    }
+
+    /**
+     * Set the current season
+     */
+    setSeason(season) {
+        this.currentSeason = season;
+        this.skybox.setSeason(season);
+
+        // Update parallax colors
+        this.parallaxLayers[0].setColors(this._getParallaxColors('mountains', season));
+        this.parallaxLayers[1].setColors(this._getParallaxColors('hills', season));
+        this.parallaxLayers[2].setColors(this._getParallaxColors('trees', season));
     }
 
     /**
@@ -218,7 +257,7 @@ export class WorldBuilder {
         // Foreground trees (rendered partially in front of player)
         for (const tree of ENVIRONMENT.trees) {
             if (camera.isVisible(tree.x - 30, gy - 100, 60, 100)) {
-                EnvironmentProp.drawTree(ctx, tree.x, gy, tree.size, this.nightT, this.totalTime);
+                EnvironmentProp.drawTree(ctx, tree.x, gy, tree.size, this.nightT, this.totalTime, this.currentSeason);
             }
         }
 
@@ -232,7 +271,7 @@ export class WorldBuilder {
         // Flowers
         for (const flower of ENVIRONMENT.flowers) {
             if (camera.isVisible(flower.x - flower.spread, gy - 20, flower.spread * 2, 20)) {
-                EnvironmentProp.drawFlowers(ctx, flower.x, gy, flower.count, flower.spread, this.nightT, this.totalTime);
+                EnvironmentProp.drawFlowers(ctx, flower.x, gy, flower.count, flower.spread, this.nightT, this.totalTime, this.currentSeason);
             }
         }
 
@@ -246,34 +285,36 @@ export class WorldBuilder {
         camera.resetTransform(ctx);
     }
 
+
     /**
      * Render the ground / path
      */
     _renderGround(ctx, camera) {
         const gy = this.groundY;
         const worldW = WORLD_CONFIG.width;
+        const palette = WORLD_CONFIG.seasons[this.currentSeason] || WORLD_CONFIG.seasons.summer;
 
-        // Main ground
-        const groundDayR = 196, groundDayG = 168, groundDayB = 130;
-        const groundNightR = 74, groundNightG = 55, groundNightB = 40;
-        const gr = Math.round(groundDayR + (groundNightR - groundDayR) * this.nightT);
-        const gg = Math.round(groundDayG + (groundNightG - groundDayG) * this.nightT);
-        const gb = Math.round(groundDayB + (groundNightB - groundDayB) * this.nightT);
+        // --- Ground ---
+        const groundDay = this._hexToRgb(palette.grassDark); // Using grassDark as basis for ground
+        const groundNight = { r: 74, g: 55, b: 40 };
+        const gr = Math.round(groundDay.r + (groundNight.r - groundDay.r) * this.nightT);
+        const gg = Math.round(groundDay.g + (groundNight.g - groundDay.g) * this.nightT);
+        const gb = Math.round(groundDay.b + (groundNight.b - groundDay.b) * this.nightT);
 
         ctx.fillStyle = `rgb(${gr}, ${gg}, ${gb})`;
         ctx.fillRect(-50, gy, worldW + 100, this.canvasHeight - gy + 50);
 
-        // Grass strip on top of ground
-        const grassDayR = 124, grassDayG = 179, grassDayB = 66;
-        const grassNightR = 61, grassNightG = 90, grassNightB = 61;
-        const gsr = Math.round(grassDayR + (grassNightR - grassDayR) * this.nightT);
-        const gsg = Math.round(grassDayG + (grassNightG - grassDayG) * this.nightT);
-        const gsb = Math.round(grassDayB + (grassNightB - grassDayB) * this.nightT);
+        // --- Grass strip ---
+        const grassDay = this._hexToRgb(palette.grass);
+        const grassNight = { r: 61, g: 90, b: 61 };
+        const gsr = Math.round(grassDay.r + (grassNight.r - grassDay.r) * this.nightT);
+        const gsg = Math.round(grassDay.g + (grassNight.g - grassDay.g) * this.nightT);
+        const gsb = Math.round(grassDay.b + (grassNight.b - grassDay.b) * this.nightT);
 
         ctx.fillStyle = `rgb(${gsr}, ${gsg}, ${gsb})`;
         ctx.fillRect(-50, gy - 4, worldW + 100, 8);
 
-        // Path / sidewalk
+        // --- Path / sidewalk ---
         const pathDayR = 212, pathDayG = 196, pathDayB = 168;
         const pathNightR = 90, pathNightG = 74, pathNightB = 56;
         const pr = Math.round(pathDayR + (pathNightR - pathDayR) * this.nightT);
@@ -293,6 +334,7 @@ export class WorldBuilder {
         ctx.stroke();
         ctx.setLineDash([]);
     }
+
 
     /**
      * Render signs and benches (between buildings and player)

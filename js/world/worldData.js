@@ -8,6 +8,46 @@ export const WORLD_CONFIG = {
     width: 5500,
     groundFraction: 0.72,   // ground Y as fraction of canvas height
     playerStart: 250,       // starting X for player
+
+    // Seasonal palettes for Canvas rendering
+    seasons: {
+        spring: {
+            skyTop: '#FFECF2',
+            skyBottom: '#FFF5F8',
+            grass: '#AED581',
+            grassDark: '#9CCC65',
+            leaves: '#F48FB1',
+            leavesDark: '#F06292',
+            particles: ['#F48FB1', '#F8BBD0', '#FFFFFF'] // Blossom colors
+        },
+        summer: {
+            skyTop: '#87CEEB',
+            skyBottom: '#F0E6D3',
+            grass: '#7CB342',
+            grassDark: '#5B8A2A',
+            leaves: '#66BB6A',
+            leavesDark: '#4CAF50',
+            particles: ['#8BC34A', '#AED581', '#689F38'] // Leaf colors
+        },
+        autumn: {
+            skyTop: '#FFCC80',
+            skyBottom: '#FFE0B2',
+            grass: '#C0CA33',
+            grassDark: '#9E9D24',
+            leaves: '#E64A19',
+            leavesDark: '#BF360C',
+            particles: ['#E64A19', '#F4511E', '#FF8F00', '#D84315'] // Autumn leaf colors
+        },
+        winter: {
+            skyTop: '#E1F5FE',
+            skyBottom: '#FFFFFF',
+            grass: '#E0F2F1',
+            grassDark: '#B2DFDB',
+            leaves: '#FFFFFF',
+            leavesDark: '#E0E0E0',
+            particles: ['#FFFFFF', '#E1F5FE', '#B3E5FC'] // Snow colors
+        }
+    }
 };
 
 /**

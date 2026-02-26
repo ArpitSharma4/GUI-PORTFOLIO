@@ -1,23 +1,19 @@
-/**
- * Skybox.js — Renders the sky gradient, sun/moon, stars, and clouds.
- * Responds to theme changes with smooth transitions.
- */
+import { WORLD_CONFIG } from './worldData.js';
+
 export class Skybox {
     constructor(canvasWidth, canvasHeight) {
         this.width = canvasWidth;
         this.height = canvasHeight;
         this.isNight = false;
+        this.currentSeason = 'summer';
         this.transitionProgress = 0; // 0 = day, 1 = night
 
-        // Sun/Moon
-        this.celestialY = 0;
+        // Celestial body
         this.celestialAngle = 0;
 
-        // Stars
+        // Stars & Clouds
         this.stars = [];
         this._generateStars(80);
-
-        // Clouds
         this.clouds = [];
         this._generateClouds(6);
     }
@@ -39,11 +35,11 @@ export class Skybox {
         this.clouds = [];
         for (let i = 0; i < count; i++) {
             this.clouds.push({
-                x: Math.random() * 2 - 0.2,   // can start off-screen
+                x: Math.random() * 2 - 0.2,
                 y: 0.05 + Math.random() * 0.25,
                 width: 80 + Math.random() * 120,
                 height: 30 + Math.random() * 25,
-                speed: 8 + Math.random() * 15   // pixels per second
+                speed: 8 + Math.random() * 15
             });
         }
     }
@@ -57,19 +53,15 @@ export class Skybox {
         this.isNight = isNight;
     }
 
-    /**
-     * @param {number} dt — delta time
-     * @param {number} time — total elapsed time
-     */
+    setSeason(season) {
+        this.currentSeason = season;
+    }
+
     update(dt, time) {
-        // Smooth transition progress
         const target = this.isNight ? 1 : 0;
         this.transitionProgress += (target - this.transitionProgress) * dt * 2;
-
-        // Celestial body slow arc
         this.celestialAngle += dt * 0.05;
 
-        // Move clouds
         for (const cloud of this.clouds) {
             cloud.x += (cloud.speed / this.width) * dt;
             if (cloud.x > 1.3) {
@@ -79,26 +71,29 @@ export class Skybox {
         }
     }
 
-    /**
-     * Render sky to canvas
-     * @param {CanvasRenderingContext2D} ctx
-     * @param {number} time — total elapsed time
-     */
     render(ctx, time) {
         const t = this.transitionProgress;
         const w = this.width;
         const h = this.height;
 
+        // Get seasonal colors
+        const palette = WORLD_CONFIG.seasons[this.currentSeason] || WORLD_CONFIG.seasons.summer;
+
         // --- Sky gradient ---
         const grad = ctx.createLinearGradient(0, 0, 0, h * 0.75);
 
-        // Interpolate colors
-        const topR = this._lerp(135, 11, t);
-        const topG = this._lerp(206, 16, t);
-        const topB = this._lerp(235, 38, t);
-        const botR = this._lerp(240, 26, t);
-        const botG = this._lerp(230, 26, t);
-        const botB = this._lerp(211, 62, t);
+        // Theme colors (interpolated with season)
+        const dayTop = this._hexToRgb(palette.skyTop);
+        const dayBot = this._hexToRgb(palette.skyBottom);
+        const nightTop = { r: 11, g: 16, b: 38 };
+        const nightBot = { r: 26, g: 26, b: 62 };
+
+        const topR = this._lerp(dayTop.r, nightTop.r, t);
+        const topG = this._lerp(dayTop.g, nightTop.g, t);
+        const topB = this._lerp(dayTop.b, nightTop.b, t);
+        const botR = this._lerp(dayBot.r, nightBot.r, t);
+        const botG = this._lerp(dayBot.g, nightBot.g, t);
+        const botB = this._lerp(dayBot.b, nightBot.b, t);
 
         grad.addColorStop(0, `rgb(${topR}, ${topG}, ${topB})`);
         grad.addColorStop(1, `rgb(${botR}, ${botG}, ${botB})`);
@@ -125,7 +120,6 @@ export class Skybox {
             const sunY = h * 0.12 + Math.sin(this.celestialAngle) * 8;
             const sunR = 32;
 
-            // Sun glow
             const sunGlow = ctx.createRadialGradient(sunX, sunY, sunR * 0.5, sunX, sunY, sunR * 4);
             sunGlow.addColorStop(0, `rgba(255, 213, 79, ${0.3 * sunAlpha})`);
             sunGlow.addColorStop(1, 'rgba(255, 213, 79, 0)');
@@ -134,22 +128,10 @@ export class Skybox {
             ctx.arc(sunX, sunY, sunR * 4, 0, Math.PI * 2);
             ctx.fill();
 
-            // Sun body
             ctx.fillStyle = `rgba(255, 213, 79, ${sunAlpha})`;
             ctx.beginPath();
             ctx.arc(sunX, sunY, sunR, 0, Math.PI * 2);
             ctx.fill();
-
-            // Sun rays
-            ctx.strokeStyle = `rgba(255, 213, 79, ${0.2 * sunAlpha})`;
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 8; i++) {
-                const angle = (i / 8) * Math.PI * 2 + time * 0.3;
-                ctx.beginPath();
-                ctx.moveTo(sunX + Math.cos(angle) * (sunR + 5), sunY + Math.sin(angle) * (sunR + 5));
-                ctx.lineTo(sunX + Math.cos(angle) * (sunR + 18), sunY + Math.sin(angle) * (sunR + 18));
-                ctx.stroke();
-            }
         }
 
         // --- Moon (night) ---
@@ -159,7 +141,6 @@ export class Skybox {
             const moonY = h * 0.1 + Math.sin(this.celestialAngle * 0.7) * 5;
             const moonR = 22;
 
-            // Moon glow
             const moonGlow = ctx.createRadialGradient(moonX, moonY, moonR * 0.5, moonX, moonY, moonR * 5);
             moonGlow.addColorStop(0, `rgba(232, 224, 208, ${0.15 * moonAlpha})`);
             moonGlow.addColorStop(1, 'rgba(232, 224, 208, 0)');
@@ -168,14 +149,12 @@ export class Skybox {
             ctx.arc(moonX, moonY, moonR * 5, 0, Math.PI * 2);
             ctx.fill();
 
-            // Moon body
             ctx.fillStyle = `rgba(232, 224, 208, ${moonAlpha})`;
             ctx.beginPath();
             ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
             ctx.fill();
 
-            // Moon crescent shadow
-            ctx.fillStyle = `rgba(${topR}, ${topG}, ${topB}, ${moonAlpha * 0.85})`;
+            ctx.fillStyle = `rgb(${topR}, ${topG}, ${topB})`;
             ctx.beginPath();
             ctx.arc(moonX + 7, moonY - 3, moonR * 0.78, 0, Math.PI * 2);
             ctx.fill();
@@ -185,10 +164,7 @@ export class Skybox {
         for (const cloud of this.clouds) {
             const cx = cloud.x * w;
             const cy = cloud.y * h;
-            const cAlphaDay = 0.7;
-            const cAlphaNight = 0.2;
-            const cAlpha = this._lerp(cAlphaDay, cAlphaNight, t);
-
+            const cAlpha = this._lerp(0.7, 0.2, t);
             const cr = this._lerp(255, 40, t);
             const cg = this._lerp(255, 40, t);
             const cb = this._lerp(255, 65, t);
@@ -213,4 +189,14 @@ export class Skybox {
     _lerp(a, b, t) {
         return a + (b - a) * t;
     }
+
+    _hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 255, g: 255, b: 255 };
+    }
 }
+

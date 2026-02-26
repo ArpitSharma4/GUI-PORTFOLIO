@@ -48,6 +48,11 @@ export class Player {
         this.onLand = null;
         this.onStep = null;
         this.stepTimer = 0;
+        this.currentSeason = 'summer';
+    }
+
+    setSeason(season) {
+        this.currentSeason = season;
     }
 
     /**
@@ -143,6 +148,7 @@ export class Player {
 
         // Sprint trails
         if (this.isSprinting && this.isMoving && this.isGrounded) {
+
             this.sprintTrails.push({ x: this.x, y: this.y, alpha: 0.4, dir: this.direction });
             if (this.sprintTrails.length > 5) this.sprintTrails.shift();
         }
@@ -338,6 +344,20 @@ export class Player {
         ctx.strokeStyle = '#E0B070';
         ctx.lineWidth = 1;
         ctx.stroke();
+
+        // --- Scarf (Winter) ---
+        if (this.currentSeason === 'winter') {
+            ctx.fillStyle = '#EF5350';
+            // Main wrap
+            ctx.beginPath();
+            ctx.roundRect(-11, headY + 5, 22, 6, 2);
+            ctx.fill();
+            // Scarf tail (behind shoulder)
+            ctx.beginPath();
+            const flap = Math.sin(this.walkCycle * 2) * 3;
+            ctx.roundRect(-2 - flap, headY + 8, 5, 12, 1);
+            ctx.fill();
+        }
 
         // --- Hair ---
         ctx.fillStyle = '#3E2723';
