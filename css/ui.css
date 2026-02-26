@@ -377,12 +377,17 @@
     }
 }
 
-/* ---- Theme Toggle Button ---- */
-.theme-toggle {
+/* ---- Top-right Button Group ---- */
+.top-buttons {
     position: fixed;
     top: 20px;
     right: 20px;
     z-index: var(--z-toggle);
+    display: flex;
+    gap: 12px;
+}
+
+.theme-toggle {
     width: 48px;
     height: 48px;
     border-radius: 50%;

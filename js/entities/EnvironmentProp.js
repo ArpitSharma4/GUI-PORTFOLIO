@@ -163,34 +163,62 @@ export class EnvironmentProp {
     }
 
     /**
-     * Draw a wooden sign
+     * Draw a wooden sign with wrapped and centered text
      */
     static drawSign(ctx, x, groundY, text, nightT) {
-        const signW = 80;
-        const signH = 40;
+        const signW = 100; // Increased width for better text fit
+        const signH = 55;  // Increased height
         const postH = 45;
+        const padding = 12; // Internal breathing room
 
-        // Post
+        // 1. Draw Post
         ctx.fillStyle = nightT > 0.5 ? '#4A3322' : '#6D4C33';
-        ctx.fillRect(x - 2.5, groundY - postH, 5, postH);
+        ctx.fillRect(x - 3, groundY - postH, 6, postH);
 
-        // Sign board
+        // 2. Draw Sign Board
+        const boardX = x - signW / 2;
+        const boardY = groundY - postH - signH;
+
         ctx.fillStyle = nightT > 0.5 ? '#5A4838' : '#8D6E63';
         ctx.beginPath();
-        ctx.roundRect(x - signW / 2, groundY - postH - signH + 5, signW, signH, 4);
+        ctx.roundRect(boardX, boardY, signW, signH, 6);
         ctx.fill();
+
         ctx.strokeStyle = nightT > 0.5 ? '#3A2818' : '#5D4037';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
-        // Text
-        ctx.font = `700 9px 'Pixelify Sans', cursive`;
+        // 3. Draw Text (Wrapped and Centered)
+        ctx.font = `700 10px 'Pixelify Sans', cursive`;
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'; // For vertical centering
         ctx.fillStyle = nightT > 0.5 ? '#E8E0D5' : '#FFF8E7';
 
-        const lines = text.split('\n');
+        const maxWidth = signW - padding * 2;
+        const words = text.split(/\s+/);
+        const lines = [];
+        let currentLine = '';
+
+        // Simple wrapping engine
+        for (const word of words) {
+            const testLine = currentLine ? currentLine + ' ' + word : word;
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && currentLine !== '') {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
+            }
+        }
+        lines.push(currentLine);
+
+        // Calculate total text height for vertical centering
+        const lineHeight = 13;
+        const totalTextHeight = lines.length * lineHeight;
+        const startY = boardY + (signH / 2) - (totalTextHeight / 2) + (lineHeight / 2);
+
         lines.forEach((line, i) => {
-            ctx.fillText(line, x, groundY - postH - signH + 20 + i * 12);
+            ctx.fillText(line, x, startY + i * lineHeight);
         });
     }
 

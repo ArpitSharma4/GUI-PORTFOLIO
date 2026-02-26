@@ -281,18 +281,24 @@ export class AudioManager {
             if (this.isMuted || !this.isInitialized) return;
 
             if (this.isNight) {
-                this._playCricket();
+                // Night: Crickets (consistent) + occasional Firefly twinkling
+                if (Math.random() > 0.4) {
+                    this._playCricket();
+                } else {
+                    this._playFireflySparkle();
+                }
             } else {
-                if (Math.random() > 0.5) {
+                // Day: Birds only
+                if (Math.random() > 0.4) {
                     this._playBirdChirp();
                 }
             }
-        }, 2000 + Math.random() * 3000);
+        }, 2500 + Math.random() * 3500);
     }
 
     _playBirdChirp() {
         const ctx = this.context;
-        if (!ctx) return;
+        if (!ctx || this.isNight) return; // Strict check
         const now = ctx.currentTime;
 
         // Bird chirp: quick frequency up-down
@@ -322,7 +328,7 @@ export class AudioManager {
 
     _playCricket() {
         const ctx = this.context;
-        if (!ctx) return;
+        if (!ctx || !this.isNight) return; // Strict check
         const now = ctx.currentTime;
 
         // Cricket: rapid clicking
@@ -344,6 +350,32 @@ export class AudioManager {
             osc.start(t);
             osc.stop(t + 0.03);
         }
+    }
+
+    /**
+     * Firefly "Sparkle" sound — magical high-pitched twinkle
+     */
+    _playFireflySparkle() {
+        const ctx = this.context;
+        if (!ctx || !this.isNight) return;
+        const now = ctx.currentTime;
+
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        const baseFreq = 3000 + Math.random() * 2000;
+        osc.frequency.setValueAtTime(baseFreq, now);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.4);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(this.volumes.ambient * 0.4, now + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.masterGain);
+        osc.start(now);
+        osc.stop(now + 0.4);
     }
 
     /**
